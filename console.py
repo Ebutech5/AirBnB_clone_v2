@@ -36,18 +36,14 @@ class HBNBCommand(cmd.Cmd):
             print('(hbnb)')
 
     def precmd(self, line):
-        """Reformat command line for advanced command syntax.
-
-        Usage: <class name>.<command>([<id> [<*args> or <**kwargs>]])
-        (Brackets denote optional fields in usage example.)
-        """
+        """Reformat command line for advanced command syntax."""
         _cmd = _cls = _id = _args = ''  # initialize line elements
 
-        # scan for general formating - i.e '.', '(', ')'
+        # scan for general formatting - i.e. '.', '(', ')'
         if not ('.' in line and '(' in line and ')' in line):
             return line
 
-        try:  # parse line left to right
+        try:
             pline = line[:]  # parsed line
 
             # isolate <class name>
@@ -58,33 +54,30 @@ class HBNBCommand(cmd.Cmd):
             if _cmd not in HBNBCommand.dot_cmds:
                 raise Exception
 
-            # if parantheses contain arguments, parse them
+            # if parentheses contain arguments, parse them
             pline = pline[pline.find('(') + 1:pline.find(')')]
             if pline:
                 # partition args: (<id>, [<delim>], [<*args>])
-                pline = pline.partition(', ')  # pline convert to tuple
+                pline = pline.partition(', ')  # pline converted to tuple
 
                 # isolate _id, stripping quotes
                 _id = pline[0].replace('\"', '')
-                # possible bug here:
-                # empty quotes register as empty _id when replaced
 
                 # if arguments exist beyond _id
                 pline = pline[2].strip()  # pline is now str
                 if pline:
                     # check for *args or **kwargs
-                    if pline[0] is '{' and pline[-1] is'}'\
-                            and type(eval(pline)) is dict:
+                    if pline[0] == '{' and pline[-1] == '}' and type(eval(pline)) == dict:
                         _args = pline
                     else:
                         _args = pline.replace(',', '')
-                        # _args = _args.replace('\"', '')
             line = ' '.join([_cmd, _cls, _id, _args])
 
-        except Exception as mess:
+        except Exception:
             pass
         finally:
             return line
+
 
     def postcmd(self, stop, line):
         """Prints if isatty is false"""
@@ -114,36 +107,40 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class"""
+        """Create an object of any class with given parameters."""
+        args_list = args.split()
         if not args:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+        class_name = args_list[0]
+        if class_name not in self.classes:
             print("** class doesn't exist **")
             return
-    new_instance = HBNBCommand.classes[args]()
-
-    for param in args_list[1:]:
-        key_value = param.split('=')
-        if len(key_value) == 2:
-            key, value = key_value
-            # Handle string values
-            if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1].replace('_', ' ').replace('\\"', '"')
-            # Handle float values
-            elif '.' in value:
-                try:
-                    value = float(value)
-                except ValueError:
-                    continue  # Skip invalid float values
-            # Handle integer values
-            else:
-                try:
-                    value = int(value)
-                except ValueError:
-                    continue  # Skip invalid integer values
-            setattr(new_instance, key, value)
-
+   # Initialize a new instance of the given class
+        new_instance = self.classes[class_name]()
+        
+        # Iterate over the arguments to set attributes
+        for param in args_list[1:]:
+            key_value = param.split('=')
+            if len(key_value) == 2:
+                key, value = key_value
+                # Process string values
+                if value.startswith('"') and value.endswith('"'):
+                    value = value[1:-1].replace('_', ' ').replace('\\"', '"')
+                # Process float values
+                elif '.' in value:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        continue  # Skip invalid float values
+                # Process integer values
+                else:
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        continue  # Skip invalid integer values
+                setattr(new_instance, key, value)
+    
         new_instance.save()
         print(new_instance.id)
         storage.save()
@@ -297,19 +294,20 @@ class HBNBCommand(cmd.Cmd):
                 args.append(v)
         else:  # isolate args
             args = args[2]
-            if args and args[0] is '\"':  # check for quoted arg
+        if args and args[0] == '\"':  # check for quoted arg
                 second_quote = args.find('\"', 1)
                 att_name = args[1:second_quote]
                 args = args[second_quote + 1:]
 
-            args = args.partition(' ')
+        args = args.partition(' ')
 
-            # if att_name was not quoted arg
-            if not att_name and args[0] is not ' ':
-                att_name = args[0]
-            # check for quoted val arg
-            if args[2] and args[2][0] is '\"':
-                att_val = args[2][1:args[2].find('\"', 1)]
+        # if att_name was not quoted arg
+        if not att_name and args[0] != ' ':
+            att_name = args[0]
+        # check for quoted val arg
+        if args[2] and args[2][0] == '\"':
+            att_val = args[2][1:args[2].find('\"', 1)]
+
 
             # if att_val was not quoted arg
             if not att_val and args[2]:
