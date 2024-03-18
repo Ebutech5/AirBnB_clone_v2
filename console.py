@@ -144,9 +144,9 @@ class HBNBCommand(cmd.Cmd):
                     continue  # Skip invalid integer values
             setattr(new_instance, key, value)
 
-    new_instance.save()
-    print(new_instance.id)
-    storage.save()
+        new_instance.save()
+        print(new_instance.id)
+        storage.save()
         # storage.save()
         # print(new_instance.id)
         # storage.save()
